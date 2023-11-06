@@ -9,6 +9,7 @@ import com.aminuolawale.writer.domain.model.Line
 import com.aminuolawale.writer.domain.model.WritingCanvas
 import com.aminuolawale.writer.domain.repository.WritingCanvasRepository
 import com.aminuolawale.writer.presentation.utils.Debouncer
+import com.aminuolawale.writer.presentation.writing_canvas.utils.HistoryStack
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -33,13 +34,17 @@ class WritingCanvasViewModel @Inject constructor(
     val eventFlow: SharedFlow<UiEvent> = _eventFlow.asSharedFlow()
 
     private var undoStack: MutableList<Line> = mutableListOf()
+    private var historyStack: HistoryStack<Line> =
+        HistoryStack { lines ->
+            setLinesOnCanvas(lines)
+        }
 
     init {
-        savedStateHandle.get<Int>("canvasId")?.let { it ->
-            if (it != -1) {
+        savedStateHandle.get<Int>("canvasId")?.let { id: Int ->
+            if (id != -1) {
                 viewModelScope.launch {
-                    val canvas = writingCanvasRepository.getCanvasById(it)
-                    _state.value = _state.value.copy(lines = canvas?.lines ?: emptyList())
+                    val canvas = writingCanvasRepository.getCanvasById(id)
+                    _state.value = _state.value.copy(writingCanvas = canvas ?: WritingCanvas())
                     canvasId = canvas?.id?.toLong()
                 }
             }
@@ -49,14 +54,13 @@ class WritingCanvasViewModel @Inject constructor(
     fun onEvent(event: WritingCanvasEvent) {
         when (event) {
             is WritingCanvasEvent.Draw -> {
-                undoStack = mutableListOf()
-                _state.value = _state.value.copy(lines = _state.value.lines + event.line)
+                clearLineHistory()
+                addNewLineToCanvas(event.line)
                 debouncer.execute()
             }
 
             is WritingCanvasEvent.ChangeDrawMode -> {
-                _state.value =
-                    _state.value.copy(isErasing = event.drawingMode is DrawingMode.IsErasing)
+                changeDrawMode(event.drawingMode)
             }
 
             is WritingCanvasEvent.SaveCanvas -> {
@@ -67,38 +71,48 @@ class WritingCanvasViewModel @Inject constructor(
             }
 
             is WritingCanvasEvent.Redo -> {
-                if (undoStack.isNotEmpty()){
-                    val line = undoStack.removeAt(undoStack.size - 1)
-                    _state.value = _state.value.copy(lines = _state.value.lines + line)
-                }
+                historyStack.redo()
+                debouncer.execute()
             }
 
             is WritingCanvasEvent.Undo -> {
-                if (_state.value.lines.isNotEmpty()){
-                    val line = _state.value.lines.last()
-                    _state.value = _state.value.copy(
-                        lines = _state.value.lines.subList(
-                            0,
-                            _state.value.lines.size - 2
-                        )
-                    )
-                    undoStack.add(line)
-                }
+                historyStack.undo()
+                debouncer.execute()
             }
         }
     }
 
     private suspend fun saveCanvas(): Long {
         return writingCanvasRepository.insertCanvas(
-            WritingCanvas(
-                id = canvasId?.toInt(),
-                lines = _state.value.lines,
-                dateCreated = System.currentTimeMillis(),
-                lastUpdated = System.currentTimeMillis()
-            )
+            _state.value.writingCanvas.copy(id = canvasId?.toInt())
         )
     }
 
+    private fun changeDrawMode(drawingMode: DrawingMode) {
+        val newState = _state.value.copy(isErasing = drawingMode is DrawingMode.IsErasing)
+        setViewState(newState)
+    }
+
+    private fun addNewLineToCanvas(line: Line) {
+        val oldWritingCanvas = _state.value.writingCanvas
+        setLinesOnCanvas(oldWritingCanvas.lines + line)
+    }
+
+    private fun setLinesOnCanvas(lines: List<Line>) {
+        val oldWritingCanvas = _state.value.writingCanvas
+        val writingCanvas = oldWritingCanvas.copy(lines = lines)
+        val newState = _state.value.copy(writingCanvas = writingCanvas)
+        setViewState(newState)
+    }
+
+    private fun setViewState(newState: WritingCanvasState) {
+        _state.value = newState
+        historyStack.updateSource(_state.value.writingCanvas.lines)
+    }
+
+    private fun clearLineHistory() {
+        undoStack = mutableListOf()
+    }
 
     sealed class UiEvent {
         object CanvasSaved : UiEvent()

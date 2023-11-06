@@ -1,4 +1,4 @@
-package com.aminuolawale.writer.presentation.home.components
+package com.aminuolawale.writer.presentation.home
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Column
@@ -17,9 +17,8 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.aminuolawale.writer.presentation.Screen
-import com.aminuolawale.writer.presentation.home.HomeEvent
-import com.aminuolawale.writer.presentation.home.HomeViewModel
-import com.aminuolawale.writer.presentation.home.UiEvent
+import com.aminuolawale.writer.presentation.home.components.Appbar
+import com.aminuolawale.writer.presentation.home.components.CanvasListGrid
 import kotlinx.coroutines.flow.collectLatest
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")

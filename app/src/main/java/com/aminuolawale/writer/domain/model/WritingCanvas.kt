@@ -12,9 +12,9 @@ import com.google.gson.Gson
 data class WritingCanvas(
     @PrimaryKey val id: Int? = null,
     val title : String = "Untitled",
-    val lines: List<Line>,
-    val dateCreated: Long,
-    val lastUpdated: Long
+    val lines: List<Line> = emptyList(),
+    val dateCreated: Long = System.currentTimeMillis(),
+    val lastUpdated: Long = System.currentTimeMillis()
 )
 
 data class Line(

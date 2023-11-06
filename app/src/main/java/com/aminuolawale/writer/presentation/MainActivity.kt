@@ -10,7 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.aminuolawale.writer.presentation.home.components.HomeScreen
+import com.aminuolawale.writer.presentation.home.HomeScreen
 import com.aminuolawale.writer.presentation.writing_canvas.components.WritingCanvasScreen
 import com.aminuolawale.writer.ui.theme.WriterTheme
 import dagger.hilt.android.AndroidEntryPoint
