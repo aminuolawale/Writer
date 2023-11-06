@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aminuolawale.writer.domain.model.Line
 import com.aminuolawale.writer.domain.model.WritingCanvas
 import com.aminuolawale.writer.domain.repository.WritingCanvasRepository
 import com.aminuolawale.writer.presentation.utils.Debouncer
@@ -31,20 +32,24 @@ class WritingCanvasViewModel @Inject constructor(
     private var _eventFlow = MutableSharedFlow<UiEvent>()
     val eventFlow: SharedFlow<UiEvent> = _eventFlow.asSharedFlow()
 
+    private var undoStack: MutableList<Line> = mutableListOf()
+
     init {
         savedStateHandle.get<Int>("canvasId")?.let { it ->
-            if (it != -1){
+            if (it != -1) {
                 viewModelScope.launch {
-                   val canvas= writingCanvasRepository.getCanvasById(it)
-                    _state.value = _state.value.copy(lines= canvas?.lines?:emptyList())
-                    canvasId  = canvas?.id?.toLong()
+                    val canvas = writingCanvasRepository.getCanvasById(it)
+                    _state.value = _state.value.copy(lines = canvas?.lines ?: emptyList())
+                    canvasId = canvas?.id?.toLong()
                 }
             }
         }
     }
+
     fun onEvent(event: WritingCanvasEvent) {
         when (event) {
             is WritingCanvasEvent.Draw -> {
+                undoStack = mutableListOf()
                 _state.value = _state.value.copy(lines = _state.value.lines + event.line)
                 debouncer.execute()
             }
@@ -60,8 +65,29 @@ class WritingCanvasViewModel @Inject constructor(
                     _eventFlow.emit(UiEvent.CanvasSaved)
                 }
             }
+
+            is WritingCanvasEvent.Redo -> {
+                if (undoStack.isNotEmpty()){
+                    val line = undoStack.removeAt(undoStack.size - 1)
+                    _state.value = _state.value.copy(lines = _state.value.lines + line)
+                }
+            }
+
+            is WritingCanvasEvent.Undo -> {
+                if (_state.value.lines.isNotEmpty()){
+                    val line = _state.value.lines.last()
+                    _state.value = _state.value.copy(
+                        lines = _state.value.lines.subList(
+                            0,
+                            _state.value.lines.size - 2
+                        )
+                    )
+                    undoStack.add(line)
+                }
+            }
         }
     }
+
     private suspend fun saveCanvas(): Long {
         return writingCanvasRepository.insertCanvas(
             WritingCanvas(

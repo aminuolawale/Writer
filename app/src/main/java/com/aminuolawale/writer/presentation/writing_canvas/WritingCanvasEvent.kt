@@ -7,6 +7,9 @@ sealed class WritingCanvasEvent () {
     data class ChangeDrawMode(val drawingMode: DrawingMode):WritingCanvasEvent()
 
     object SaveCanvas: WritingCanvasEvent()
+
+    object Undo:WritingCanvasEvent()
+    object Redo: WritingCanvasEvent()
 }
 
 sealed class DrawingMode() {

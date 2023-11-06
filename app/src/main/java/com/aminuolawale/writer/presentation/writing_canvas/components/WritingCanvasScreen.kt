@@ -16,6 +16,8 @@ import androidx.compose.material.Icon
 import androidx.compose.material.Scaffold
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -87,12 +89,12 @@ fun WritingCanvasScreen(
                     modifier = Modifier.padding(end = 10.dp),
                     onDrawClick = { viewModel.onEvent(WritingCanvasEvent.ChangeDrawMode(DrawingMode.IsDrawing)) },
                     onEraseClick = { viewModel.onEvent(WritingCanvasEvent.ChangeDrawMode(DrawingMode.IsErasing)) })
-                Button(onClick = {viewModel.onEvent(WritingCanvasEvent.SaveCanvas)  }) {
-                    Icon(
-                        imageVector = Icons.Default.AddCircle,
-                        tint = Color.Black,
-                        contentDescription = "Save Canvas"
-                    )
+                Button(onClick ={viewModel.onEvent(WritingCanvasEvent.Undo)}) {
+                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Undo")
+                }
+                Button(onClick = { viewModel.onEvent(WritingCanvasEvent.Redo) }) {
+                    Icon(imageVector = Icons.Default.ArrowForward, contentDescription = "Redo")
+
                 }
             }
         }
