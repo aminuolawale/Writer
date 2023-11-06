@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aminuolawale.writer.domain.model.WritingCanvas
 import com.aminuolawale.writer.domain.repository.WritingCanvasRepository
+import com.aminuolawale.writer.presentation.utils.Debouncer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -22,6 +23,7 @@ class WritingCanvasViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle
 ) :
     ViewModel() {
+    private val debouncer = Debouncer(viewModelScope, 200L, this::saveCanvas)
     private var _state = mutableStateOf(WritingCanvasState())
     val state: State<WritingCanvasState> = _state
     private var canvasId: Long? = null
@@ -44,6 +46,7 @@ class WritingCanvasViewModel @Inject constructor(
         when (event) {
             is WritingCanvasEvent.Draw -> {
                 _state.value = _state.value.copy(lines = _state.value.lines + event.line)
+                debouncer.execute()
             }
 
             is WritingCanvasEvent.ChangeDrawMode -> {
@@ -53,19 +56,23 @@ class WritingCanvasViewModel @Inject constructor(
 
             is WritingCanvasEvent.SaveCanvas -> {
                 viewModelScope.launch {
-                    canvasId = writingCanvasRepository.insertCanvas(
-                        WritingCanvas(
-                            id = canvasId?.toInt(),
-                            lines = _state.value.lines,
-                            dateCreated = System.currentTimeMillis(),
-                            lastUpdated = System.currentTimeMillis()
-                        )
-                    )
+                    canvasId = saveCanvas()
                     _eventFlow.emit(UiEvent.CanvasSaved)
                 }
             }
         }
     }
+    private suspend fun saveCanvas(): Long {
+        return writingCanvasRepository.insertCanvas(
+            WritingCanvas(
+                id = canvasId?.toInt(),
+                lines = _state.value.lines,
+                dateCreated = System.currentTimeMillis(),
+                lastUpdated = System.currentTimeMillis()
+            )
+        )
+    }
+
 
     sealed class UiEvent {
         object CanvasSaved : UiEvent()
