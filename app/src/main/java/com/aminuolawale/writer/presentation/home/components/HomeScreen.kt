@@ -7,27 +7,55 @@ import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.rememberScaffoldState
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.aminuolawale.writer.presentation.Screen
+import com.aminuolawale.writer.presentation.home.HomeEvent
+import com.aminuolawale.writer.presentation.home.HomeViewModel
+import com.aminuolawale.writer.presentation.home.UiEvent
+import kotlinx.coroutines.flow.collectLatest
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@OptIn(ExperimentalMaterial3Api::class)
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(navController: NavController, viewModel: HomeViewModel = hiltViewModel()) {
+    val state = viewModel.state
     val scaffoldState = rememberScaffoldState()
-    Scaffold(floatingActionButton = {
-        FloatingActionButton(onClick = { navController.navigate(Screen.WritingCanvasScreen.route)}) {
-            Icon(imageVector = Icons.Default.Add , contentDescription = "Create new canvas" )
+    LaunchedEffect(key1 = true ){
+        viewModel.eventFlow.collectLatest {
+            when (it) {
+                is UiEvent.CanvasDeleted -> {
+                    scaffoldState.snackbarHostState.showSnackbar(message = "Deleted")
+                }
+            }
+        }
+    }
+    Scaffold( scaffoldState=scaffoldState, floatingActionButton = {
+        FloatingActionButton(
+            onClick = { navController.navigate(Screen.WritingCanvasScreen.route) },
+            shape = RectangleShape,
+            containerColor = Color.Black,
+            contentColor = Color.White
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Create new canvas",
+                tint = Color.White
+            )
         }
     }) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Text(text = "This is the home-screen")
+            Appbar(
+            )
+            CanvasListGrid(canvasList = state.value, onItemClick = {
+                navController.navigate(Screen.WritingCanvasScreen.route+"?canvasId=$it")
+            }, onItemLongClick = {viewModel.onEvent(HomeEvent.DeleteCanvas(it))})
         }
     }
 }
