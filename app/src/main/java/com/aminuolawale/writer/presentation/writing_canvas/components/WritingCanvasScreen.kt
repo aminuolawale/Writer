@@ -47,8 +47,7 @@ fun WritingCanvasScreen(
         Column(modifier = Modifier.fillMaxSize()) {
             Appbar()
             WritingCanvasComp(
-                lines = state.value.writingCanvas.lines,
-                isErasing = state.value.isErasing
+                lines = state.value.writingCanvas.lines
             ) { line ->
                 viewModel.onEvent(WritingCanvasEvent.Draw(line))
 

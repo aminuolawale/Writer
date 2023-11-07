@@ -2,6 +2,8 @@ package com.aminuolawale.writer.presentation.writing_canvas
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -55,7 +57,12 @@ class WritingCanvasViewModel @Inject constructor(
         when (event) {
             is WritingCanvasEvent.Draw -> {
                 clearLineHistory()
-                addNewLineToCanvas(event.line)
+                addNewLineToCanvas(
+                    event.line.copy(
+                        color = if (_state.value.isErasing) Color.White else Color.Black,
+                        strokeWidth = if (_state.value.isErasing) 40.dp else 1.dp
+                    )
+                )
                 debouncer.execute()
             }
 

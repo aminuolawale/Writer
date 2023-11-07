@@ -16,9 +16,9 @@ import androidx.compose.ui.unit.dp
 import com.aminuolawale.writer.domain.model.Line
 
 @Composable
-fun WritingCanvasComp(lines: List<Line>, isErasing:Boolean, onPointerDrag:(Line)->Unit) {
+fun WritingCanvasComp(lines: List<Line>,  onPointerDrag:(Line)->Unit) {
     Canvas(modifier = Modifier
-        .shadow(elevation = 6.dp)
+        .shadow(elevation =6.dp)
         .fillMaxHeight(0.95F)
         .fillMaxWidth()
         .padding(10.dp)
@@ -28,9 +28,7 @@ fun WritingCanvasComp(lines: List<Line>, isErasing:Boolean, onPointerDrag:(Line)
                 change.consume()
                 val line = Line(
                     start = change.position - dragAmount,
-                    end = change.position,
-                    color = if (isErasing) Color.White else Color.Black,
-                    strokeWidth = if (isErasing) 40.dp else 1.dp
+                    end = change.position
                 )
                 onPointerDrag(line)
             }
