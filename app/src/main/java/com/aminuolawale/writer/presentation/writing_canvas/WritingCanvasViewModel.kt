@@ -92,7 +92,7 @@ class WritingCanvasViewModel @Inject constructor(
     private suspend fun saveCanvas(): Long {
         return writingCanvasRepository.insertCanvas(
             _state.value.writingCanvas.copy(id = canvasId?.toInt())
-        )
+        ).also { canvasId = it }
     }
 
     private fun changeDrawMode(drawingMode: DrawingMode) {
