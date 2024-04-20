@@ -1,10 +1,8 @@
 package com.aminuolawale.writer.data.data_source
 
-import androidx.room.ProvidedTypeConverter
 import androidx.room.TypeConverter
 import com.aminuolawale.writer.domain.model.Line
 import com.google.gson.Gson
-import com.google.gson.JsonParser
 import com.google.gson.reflect.TypeToken
 
 class Converters {
